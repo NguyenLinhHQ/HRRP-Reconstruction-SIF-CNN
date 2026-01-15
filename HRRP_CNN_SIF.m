@@ -1,7 +1,13 @@
+%% =========================================================
+%% This script reproduces the simulation results reported in:
+%% Section III: Methodology
+%% Section IV: Experimental Results
+%% =========================================================
 close all;
 clear all;
 clc;
-%% I SIF
+%% I. Spectral Inverse Filtering (SIF)
+%% Corresponds to Section III.B in the paper
 %% Radar and signal parameters
 pw = 1e-6;                         % Pulse width [s]
 c = 3e8;                           % Speed of light [m/s]
@@ -16,6 +22,7 @@ target_amps = [0.8, 1.5, 2.0, 1.8, 1.2, 0.6];      % Reflector amplitudes
 p_target = length(target_amps);
 
 %% Part 1: Sampling Frequency Sweep
+%% Reproduces figures analyzing the effect of fs on HRRP resolution
 figure('Name','SIF vs Sampling Rate (Clean Real)', ...
        'Position',[50 50 1400 1000]);   
 
@@ -72,6 +79,7 @@ end
 
 
 %%  Part 2: SNR Sweep at fs = 60 MHz 
+%% Corresponds to noisy SIF results in Section IV
 fs = 60e6; 
 dt = 1/fs;
 t = 0:dt:duration;
@@ -128,7 +136,10 @@ for i = 1:length(snr_list)
 end
 
 
-%% II CNN
+%% II CNN%% =========================================================
+%% II. Dataset generation for CNN training
+%% Corresponds to Section III.C
+%% =========================================================
 % Parameters
 pw = 1e-6;                         % Pulse width [s]
 duration = 4e-6;                   % Duration 600m
@@ -188,6 +199,8 @@ XTrain = reshape(X', [Nsamples, 1, 1, nSignals]);
 YTrain = reshape(Y', [Nsamples, 1, 1, nSignals]);
 
 %% Define CNN
+%% CNN architecture for HRRP reconstruction
+%% Corresponds to Section III.D and Figure 2
 layers = [
     imageInputLayer([Nsamples 1 1], 'Normalization', 'none')
     convolution2dLayer([5 1], 64, 'Padding', 'same')
@@ -215,6 +228,10 @@ net = trainNetwork(XTrain, YTrain, layers, options);
 save('trainedNet.mat', 'net');
 
 %% Evaluation
+%% =========================================================
+%% Monte Carlo evaluation over multiple SNR levels
+%% Metrics: RMSE, PSNR, MSSIM (Section IV-C)
+%% =========================================================
 snr_range = -5:5:40;
 num_trials = 100;
 avg_rmse_cnn = zeros(size(snr_range));
